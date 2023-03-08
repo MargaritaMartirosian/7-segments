@@ -1,0 +1,299 @@
+/*This code is used to control the direction of a elegoo robot car . 
+By using an infrared remote , you can control the direction of the robot car.
+The code consists of functions that are then used in a switch...case control structure.
+Using the IRremote.h library.
+Using the STBY pin 3 on Arduino Uno for direction control. 
+*/
+//------------------LIBRARIES------------------
+#include "IRremote.h" // include Infrared remote Library 
+#include <Servo.h>    // include servo library 
+//------------------CAR-------------------------
+int const  AIN1 = 8;  // Motor 1 connected to D8 pin on Arduino Uno
+int const PWMA = 5;   // Motor 1 speed control pin D5 on Arduino Uno 
+int const BIN1 = 7;   // Motor 2 connected to D8 pin on Arduino Uno
+int const PWMB = 6;   // Motor 2 speed control pin D6 on Arduino Uno
+int i ;               // variable used for "for loop"
+int STBY = 3;         // STBY pin 3 on Arduino Uno used for direction 
+//------------------SERVO-------------------------
+Servo servo1;  // servo variable 
+int angle = 0; // initialise the angle of the servo to 0 
+int x = 0;            // variable with initial value of 0 
+int PositionValue = 5;  // variable with innitial value of 5 , position value 
+//-----------------REMOTE------------------------
+int receiver = 9;  // Signal Pin of IR receiver to Arduino Digital Pin 9
+int KeyValue = 0 ; //storing the hex code in a global variable Value  every time a code is received
+IRrecv irrecv(receiver);  // create instance of 'irrecv'
+decode_results results;   // create instance of 'decode_results'
+//----------------7 SEGMENT---------------------
+int LatchPin = A5;  // defines pin for the latch
+int ShiftPin = A2;  // defines pin for shift 
+int DataInput = A4; // defines pin for data input 
+int digPins[4] = {13,12,A0,A1}; // has four dedicated common pins to control each digit separately 
+const byte digits[10] = {  
+  // defines an array of bytes that represent the pattern to light up each segment of a digit.
+  B00111111,  // 0
+  //B11000000,  //0 TEST
+  B00000110,  // 1
+  B01011011,  // 2
+  B01001111,  // 3
+  B01100110,  // 4
+  B01101101,  // 5
+  B01111101,  // 6
+  B0000111,   // 7
+  B01111111,  // 8
+  B01101111,  // 9
+};
+unsigned long current_millis = millis();//assigning a long variable to millis
+unsigned long previous_millis;          // assigning this variable for the use in a loop without using delay
+//-------------------------------SETUP----------------------------------------------
+void setup() { // code will run once
+  Serial.begin(9600);  // Serial Communication is starting with 9600 of baudrate speed
+  irrecv.enableIRIn(); // Start the receiver
+  pinMode( i, OUTPUT); // i variable is set as ans OUTPUT
+  pinMode(STBY,OUTPUT);//STBY pin is set as an OUTPUT 
+//----servo setup
+  servo1.attach (10);      //attaches servo1 on pins 9 for data
+  servo1.write(x);         //position of the servo depends on the value of x 
+//----seven segment setup
+  pinMode (LatchPin ,OUTPUT); // set Latch pin as an OUTPUT 
+  pinMode (ShiftPin, OUTPUT); // set Shift pin as an OUTPUT 
+  pinMode (DataInput, OUTPUT);// set DataInput pin as an OUTPUT 
+  pinMode (13, OUTPUT);  // set digit pin one of  7 segement as an OUTPUT
+  pinMode (12, OUTPUT);  // set digit pin two of 7 segement as an OUTPUT
+  pinMode (A0, OUTPUT);  // set digit pin three of 7 segement as an OUTPUT
+  pinMode (A1, OUTPUT);  // set digit pin four of  7 segement as an OUTPUT
+  
+  for (int i=3; i <9; i ++) {//(initialization; condition; increment)
+  }
+}
+//---------------------------------FUNCTIONS---------------------------------------
+void forward () {         // details for forward function
+  digitalWrite(STBY,HIGH);// STBY pin 3 is ON
+  digitalWrite(AIN1, 1);  // Motor 1 clockwise direction 
+  analogWrite(PWMA, 100); // Speed is 100
+  digitalWrite(BIN1, 1);  // Motor 2 clockwise direction 
+  analogWrite(PWMB, 100); // Speed is 100  
+  delay(100);
+}
+void backward () {        // details for backward function
+  digitalWrite(STBY,HIGH);// STBY pin 3 is ON
+  digitalWrite(AIN1, 0);  // Motor 1 counterclockwise direction 
+  analogWrite(PWMA, 100); // Speed is 100
+  digitalWrite(BIN1, 0);  // Motor 2 counterclockwise direction 
+  analogWrite(PWMB, 100); // Speed is 100  
+  delay(100);
+}
+void left () {            // details for left function
+  digitalWrite(STBY,HIGH);// STBY pin 3 is ON
+  digitalWrite(AIN1, 1);  // Motor 1 clockwise direction 
+  analogWrite(PWMA, 100); // Speed is 100
+  digitalWrite(BIN1, 0);  // Motor 2 counterclockwise direction 
+  analogWrite(PWMB, 100); // Speed is 100
+  delay(100);
+}
+void right () {           // details for right function
+  digitalWrite(STBY,HIGH);// STBY pin 3 is ON
+  digitalWrite(AIN1, 0);  // Motor 1 counterclockwise direction 
+  analogWrite(PWMA, 100); // Speed is 100
+  digitalWrite(BIN1, 1);  // Motor 2 clockwise direction 
+  analogWrite(PWMB, 100); // Speed is 100
+  delay(100);
+}
+void left_forward () {    // details for left forward function
+  digitalWrite(STBY,HIGH);// STBY pin 3 is ON
+  digitalWrite(AIN1, 1);  // Motor 1 clockwise direction 
+  analogWrite(PWMA, 100); // Speed is 100
+  digitalWrite(BIN1, 1);  // Motor 2 clockwise direction 
+  analogWrite(PWMB, 50);  // Speed is half of 100
+  delay(100);
+}
+void left_backward () {   // details for left backward function
+  digitalWrite(STBY,HIGH);// STBY pin 3 is ON
+  digitalWrite(AIN1, 0);  // Motor 1 counterclockwise direction 
+  analogWrite(PWMA, 100); // Speed is 100
+  digitalWrite(BIN1, 0);  // Motor 2 counterclockwise direction 
+  analogWrite(PWMB, 50);  // Speed is half of 100
+  delay(100);
+}
+
+void right_forward () {   // details for right forward function
+  digitalWrite(STBY,HIGH);// STBY pin 3 is ON
+  digitalWrite(AIN1, 1);  // Motor 1 clockwise direction  
+  analogWrite(PWMA, 50);  // Speed is half of 100
+  digitalWrite(BIN1, 1);  // Motor 2 clockwise direction 
+  analogWrite(PWMB, 100); // Speed is 100
+  delay(100);
+}
+
+void right_backward () {  // details for right backward function
+  digitalWrite(STBY,HIGH);// STBY pin 3 is ON
+  digitalWrite(AIN1, 0);  // Motor 1 counterclockwise direction 
+  analogWrite(PWMA, 50);  // Speed is half of 100
+  digitalWrite(BIN1, 0);  // Motor 2 counterclockwise direction 
+  analogWrite(PWMB, 100); // Speed is 100
+  delay(100);
+}
+
+void Stop () {            // datails for stop function
+  digitalWrite(STBY,LOW); // STBY pin 3 is OFF
+  digitalWrite(AIN1, 1);  // Motor 1 clockwise direction 
+  analogWrite(PWMA, 0);   // Speed is 0 
+  digitalWrite(BIN1, 1);  // Motor 2 clockwise direction 
+  analogWrite(PWMB, 0);   // Speed is 0   
+  delay(100);
+}
+//-------------------SEVEN SEGMENT ---------------------
+//--------------------(VOID LOOP)-----------------------
+void loop () {                   // code will run in a loop
+  
+    servo1.write(x);//sets the servo's position based on the value of x
+                    // value of x is incremented by dir each time the code runs
+    x = x + PositionValue;
+    if (x < 0){/*If x becomes less than 0, the direction of the servo's movement is changed by setting dir to 5. 
+      This means that the servo will start moving in the opposite direction until it reaches its minimum position.*/ 
+   PositionValue = 5;
+    }
+    
+    
+    if (x > 180){/*If x becomes greater than 180, the direction is again changed by setting dir to -5,
+      and the servo will start moving in the opposite direction until it reaches its maximum position.*/
+    PositionValue = -5;
+    }
+    
+  
+  digitalWrite (13, HIGH); // pin 13 is ON
+  digitalWrite (12, HIGH); // pin 12 is ON
+  digitalWrite (A0, HIGH); // pin A0 is ON
+  digitalWrite (A1 ,LOW);  // pin A1 is OFF
+  digitalWrite (LatchPin, LOW); // pin A5 is OFF
+  shiftOut(DataInput, ShiftPin, MSBFIRST, digits[1]);
+  digitalWrite (LatchPin, HIGH); //pin A5 is ON 
+
+  delay(5);
+
+  digitalWrite (13, HIGH); // pin 13 is ON
+  digitalWrite (12, HIGH); // pin 12 is ON
+  digitalWrite (A0,LOW);   // pin A0 is OFF
+  digitalWrite (A1, HIGH); // pin A1 is ON
+  digitalWrite (LatchPin, LOW); // pin A5 is OFF
+  shiftOut(DataInput, ShiftPin, MSBFIRST, digits[8]);
+  digitalWrite (LatchPin, HIGH);// pin A5 is ON 
+  
+
+  delay(5);
+  
+  digitalWrite (13, HIGH); // pin 13 is ON
+  digitalWrite (12, LOW);  // pin 12 is ON
+  digitalWrite (A0, HIGH); // pin A0 is ON
+  digitalWrite (A1 ,HIGH); // pin A1 is ON
+  digitalWrite (LatchPin, LOW); // pin A5 is OFF
+  shiftOut(DataInput, ShiftPin, MSBFIRST, digits[7]);
+  digitalWrite (LatchPin, HIGH);// pin
+
+  delay(5);
+
+  digitalWrite (13, LOW);
+  digitalWrite (12, HIGH);
+  digitalWrite (A0, HIGH);
+  digitalWrite (A1 ,HIGH);
+  digitalWrite (LatchPin, LOW);
+  shiftOut(DataInput, ShiftPin, MSBFIRST, digits[2]);
+  digitalWrite (LatchPin, HIGH); 
+
+  delay(5);
+  //----------------------REMOTE--------------------------
+
+  if (irrecv.decode(&results)){     // have we received an IR signal?
+    if (results.value == 0XFFFFFFFF)//if the same signal is recieved twice
+        results.value = KeyValue ;  // previously stored value is used as the current key press
+          
+           switch(results.value)    // start of switch case for value received 
+{
+   case  0xFFA25D: 
+   // Ch- button pressed 
+   //Hex code received 
+   //Arduino prints on SM
+   forward(); //function forward 
+   Serial.println ("Malcolm goes forward");
+   break;// control sctructure
+         // exit from switch case 
+    
+   case 0xFF629D:
+   // Ch button pressed 
+   //Hex code received 
+   //Arduino prints on SM
+   backward();//function backward
+   Serial.println ("Malcolm goes backward");
+   break;// control sctructure
+         // exit from switch case 
+
+   case 0xFFE21D:
+   //Ch+ button pressed 
+   //Hex code received 
+   //Arduino prints on SM
+   left();//function left
+   Serial.println ("Malcolm goes left");
+   break;// control sctructure
+         // exit from switch case 
+
+   case 0xFF22DD:
+   // |<< button pressed 
+   //Hex code received 
+   //Arduino prints on SM
+   right();//function right
+   Serial.println ("Malcolm goes right");
+   break;// control sctructure
+         // exit from switch case 
+
+   case 0xFF02FD:
+   // >>| button pressed 
+   //Hex code received
+   //Arduino prints on SM 
+   left_forward();//function left forward
+   Serial.println ("Malcolm goes left forward");
+   break;// control sctructure
+         // exit from switch case 
+
+   case 0xFFC23D:
+   // >|| button pressed 
+   //Hex code received
+   //Arduino prints on SM 
+   left_backward();//function left backward
+   Serial.println ("left backward");
+   break;// control sctructure
+         // exit from switch case 
+   
+   case 0xFFE01F:
+   // "-" button pressed 
+   //Hex code received
+   //Arduino prints on SM 
+   right_forward();//function right forward
+   Serial.println ("Malcolm goes right forward");
+   break;// control sctructure
+         // exit from switch case 
+   
+   case 0xFFA857:
+   // "+ " button pressed 
+   //Hex code received
+   //Arduino prints on SM 
+   right_backward();//function right backward
+   Serial.println ("Malcolm goes right backward");
+   break;// control sctructure
+         // exit from switch case 
+   
+   case 0xFF906F:
+   // EQ button pressed 
+   //Hex code received
+   //Arduino prints on SM 
+   Stop(); //function stop 
+   Serial.println ("Malcolm stops");
+   break;// control sctructure
+         // exit from switch case   
+         servo1.write(90);
+
+  }
+}
+   KeyValue = results.value; 
+   irrecv.resume(); // receive the next value
+
+}
